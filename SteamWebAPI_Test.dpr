@@ -47,6 +47,16 @@ begin
   end;
 end;
 
+procedure Test_IPlayerService_GetSteamLevel;
+begin
+  var steam := TSteamAPI.Create(API_KEY);
+  try
+    Writeln(Format('Steam Level: %d', [steam.IPlayerService.GetSteamLevel(STEAM_ID)]));
+  finally
+    steam.Destroy;
+  end;
+end;
+
 procedure Main;
 begin
   while True do
@@ -69,7 +79,7 @@ begin
   try
     //Main;
 
-    Test_IPlayerService_GetOwnedGames;
+    Test_IPlayerService_GetSteamLevel;
 
     Writeln('Press any key to exit.');
     ReadLn;

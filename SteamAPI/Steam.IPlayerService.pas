@@ -14,6 +14,7 @@ type
       API_URL = 'https://api.steampowered.com/IPlayerService/';
       API_GetRecentlyPlayedGames = 'GetRecentlyPlayedGames';
       API_GetOwnedGames = 'GetOwnedGames';
+      API_GetSteamLevel = 'GetSteamLevel';
   private
     { Private Variables }
     FToken: string;
@@ -24,6 +25,7 @@ type
     { Public Methods }
     function GetRecentlyPlayedGames(const SteamID: UInt64; const Count: UInt32 = 0): TArray<TSteamRecentlyPlayedGame>;
     function GetOwnedGames(const SteamID: UInt64; const IncludeAppInfo, IncludeFreeGames: Boolean): TArray<TSteamOwnedGame>;
+    function GetSteamLevel(const SteamID: UInt64): Integer;
     /////////////////////////////////////////////
     constructor Create(const API_Key: string);
     destructor Destroy;
@@ -127,6 +129,28 @@ begin
     end
     else
       raise Exception.Create('[TSteamAPIIPlayerService.GetRecentlyPlayedGames] ' + rest.Response.StatusText);
+  finally
+    rest.Free;
+  end;
+end;
+
+function TSteamAPIIPlayerService.GetSteamLevel(const SteamID: UInt64): Integer;
+begin
+  Result := 0;
+
+  var rest := Self.SetupRestRequest(API_GetSteamLevel);
+  try
+    rest.AddParameter('steamid', SteamID.ToString);
+
+    rest.Method := TRESTRequestMethod.rmGET;
+    rest.Execute;
+
+    if rest.Response.StatusCode = 200 then
+    begin
+      rest.Response.JSONValue.TryGetValue<Integer>('response.player_level', result);
+    end
+    else
+      raise Exception.Create('[TSteamAPIIPlayerService.GetSteamLevel] ' + rest.Response.StatusText);
   finally
     rest.Free;
   end;
