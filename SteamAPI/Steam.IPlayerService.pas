@@ -113,14 +113,14 @@ begin
       for var jGame in rest.Response.JSONValue.FindValue('response.games') as TJSONArray do
       begin
         var aGame: TSteamRecentlyPlayedGame;
-        aGame.AppID := jgame.GetValue<Integer>('appid');
-        aGame.Name := jgame.GetValue<string>('name');
-        aGame.Playtime_2Weeks := jgame.GetValue<Integer>('playtime_2weeks');
-        aGame.Playetime_Forever := jgame.GetValue<Integer>('playtime_forever');
-        aGame.Img_Icon_URL := jgame.GetValue<string>('img_icon_url');
-        aGame.Playtime_Windows_Forever := jgame.GetValue<Integer>('playtime_windows_forever');
-        aGame.Playtime_Mac_forever := jgame.GetValue<Integer>('playtime_mac_forever');
-        aGame.Playtime_Linux_Forever := jgame.GetValue<Integer>('playtime_linux_forever');
+        jgame.TryGetValue<Integer>('appid', aGame.AppID);
+        jgame.TryGetValue<string>('name', aGame.Name);
+        jgame.TryGetValue<Integer>('playtime_2weeks', aGame.Playtime_2Weeks);
+        jgame.TryGetValue<Integer>('playtime_forever', aGame.Playetime_Forever);
+        jgame.TryGetValue<string>('img_icon_url', aGame.Img_Icon_URL);
+        jgame.TryGetValue<Integer>('playtime_windows_forever', aGame.Playtime_Windows_Forever);
+        jgame.TryGetValue<Integer>('playtime_mac_forever', aGame.Playtime_Mac_forever);
+        jgame.TryGetValue<Integer>('playtime_linux_forever', aGame.Playtime_Linux_Forever);
 
         Result[I] := aGame;
 
