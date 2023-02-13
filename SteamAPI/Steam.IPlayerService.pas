@@ -74,7 +74,7 @@ begin
       end;
     end
     else
-      Exception.Create('[TSteamAPIIPlayerService.GetRecentlyPlayedGames]' + rest.Response.StatusText);
+      raise Exception.Create('[TSteamAPIIPlayerService.GetRecentlyPlayedGames] ' + rest.Response.StatusText);
   finally
     rest.Free;
   end;
