@@ -16,7 +16,7 @@ const
 const
   STEAM_ID = 76561198113034550;
 
-procedure Test_IPlayerService;
+procedure Test_IPlayerService_GetRecentlyPlayedGames;
 begin
   var steam := TSteamAPI.Create(API_KEY);
   try
@@ -24,6 +24,24 @@ begin
     begin
       Writeln(Format('Game: %s   Hours: %d', [aGame.Name, aGame.Playetime_Forever div 60]));
     end;
+  finally
+    steam.Destroy;
+  end;
+end;
+
+procedure Test_IPlayerService_GetOwnedGames;
+begin
+  var steam := TSteamAPI.Create(API_KEY);
+  try
+    var I := 0;
+    for var aGame in steam.IPlayerService.GetOwnedGames(STEAM_ID, False, True) do
+    begin
+      Writeln(Format('Game: %s   Hours: %d', [aGame.Name, aGame.Playetime_Forever div 60]));
+
+      Inc(I);
+    end;
+
+    Writeln(Format('Total Games: %d', [I]));
   finally
     steam.Destroy;
   end;
@@ -51,7 +69,7 @@ begin
   try
     //Main;
 
-    Test_IPlayerService;
+    Test_IPlayerService_GetOwnedGames;
 
     Writeln('Press any key to exit.');
     ReadLn;

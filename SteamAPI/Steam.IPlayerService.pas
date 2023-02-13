@@ -13,6 +13,7 @@ type
     const
       API_URL = 'https://api.steampowered.com/IPlayerService/';
       API_GetRecentlyPlayedGames = 'GetRecentlyPlayedGames';
+      API_GetOwnedGames = 'GetOwnedGames';
   private
     { Private Variables }
     FToken: string;
@@ -22,6 +23,7 @@ type
   public
     { Public Methods }
     function GetRecentlyPlayedGames(const SteamID: UInt64; const Count: UInt32 = 0): TArray<TSteamRecentlyPlayedGame>;
+    function GetOwnedGames(const SteamID: UInt64; const IncludeAppInfo, IncludeFreeGames: Boolean): TArray<TSteamOwnedGame>;
     /////////////////////////////////////////////
     constructor Create(const API_Key: string);
     destructor Destroy;
@@ -39,6 +41,56 @@ end;
 destructor TSteamAPIIPlayerService.Destroy;
 begin
   //
+end;
+
+function TSteamAPIIPlayerService.GetOwnedGames(const SteamID: UInt64; const IncludeAppInfo, IncludeFreeGames: Boolean): TArray<TSteamOwnedGame>;
+begin
+  var rest := Self.SetupRestRequest(API_GetOwnedGames);
+  try
+    rest.AddParameter('steamid', SteamID.ToString);
+
+    if IncludeAppInfo then
+      rest.AddParameter('include_appinfo', 'True')
+    else
+      rest.AddParameter('include_appinfo', 'False');
+
+    if IncludeFreeGames then
+      rest.AddParameter('include_played_free_games', 'True')
+    else
+      rest.AddParameter('include_played_free_games', 'False');
+
+    rest.Method := TRESTRequestMethod.rmGET;
+    rest.Execute;
+
+    if rest.Response.StatusCode = 200 then
+    begin
+      var gameCount := rest.Response.JSONValue.GetValue<Integer>('response.game_count');
+      SetLength(Result, gameCount);
+
+      var I := 0;
+      for var jGame in rest.Response.JSONValue.FindValue('response.games') as TJSONArray do
+      begin
+        var aGame: TSteamOwnedGame;
+        jgame.TryGetValue<Integer>('appid', aGame.AppID);
+        jgame.TryGetValue<string>('name', aGame.Name);
+        jgame.TryGetValue<Integer>('playtime_forever', aGame.Playetime_Forever);
+        jgame.TryGetValue<string>('img_icon_url', aGame.Img_Icon_URL);
+        jgame.TryGetValue<Boolean>('has_community_visible_stats', aGame.Has_Community_Visible_Stats);
+        jgame.TryGetValue<Integer>('playtime_windows_forever', aGame.Playtime_Windows_Forever);
+        jgame.TryGetValue<Integer>('playtime_mac_forever', aGame.Playtime_Mac_forever);
+        jgame.TryGetValue<Integer>('playtime_linux_forever', aGame.Playtime_Linux_Forever);
+        jgame.TryGetValue<Int64>('rtime_last_played', aGame.rTime_Last_Played);
+
+        Result[I] := aGame;
+
+        Inc(I);
+      end;
+    end
+    else
+      raise Exception.Create('[TSteamAPIIPlayerService.GetOwnedGames] ' + rest.Response.StatusText);
+  finally
+    rest.Free;
+  end;
 end;
 
 function TSteamAPIIPlayerService.GetRecentlyPlayedGames(const SteamID: UInt64; const Count: UInt32): TArray<TSteamRecentlyPlayedGame>;
