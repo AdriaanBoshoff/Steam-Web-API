@@ -15,6 +15,7 @@ type
       API_GetRecentlyPlayedGames = 'GetRecentlyPlayedGames';
       API_GetOwnedGames = 'GetOwnedGames';
       API_GetSteamLevel = 'GetSteamLevel';
+      API_GetBadges = 'GetBadges';
   private
     { Private Variables }
     FToken: string;
@@ -26,6 +27,7 @@ type
     function GetRecentlyPlayedGames(const SteamID: UInt64; const Count: UInt32 = 0): TArray<TSteamRecentlyPlayedGame>;
     function GetOwnedGames(const SteamID: UInt64; const IncludeAppInfo, IncludeFreeGames: Boolean): TArray<TSteamOwnedGame>;
     function GetSteamLevel(const SteamID: UInt64): Integer;
+    function GetBadges(const SteamID: UInt64): TSteamPlayerBadges;
     /////////////////////////////////////////////
     constructor Create(const API_Key: string);
     destructor Destroy;
@@ -43,6 +45,49 @@ end;
 destructor TSteamAPIIPlayerService.Destroy;
 begin
   //
+end;
+
+function TSteamAPIIPlayerService.GetBadges(const SteamID: UInt64): TSteamPlayerBadges;
+begin
+  var rest := Self.SetupRestRequest(API_GetBadges);
+  try
+    rest.AddParameter('steamid', SteamID.ToString);
+    rest.Method := TRESTRequestMethod.rmGET;
+    rest.Execute;
+
+    if rest.Response.StatusCode = 200 then
+    begin
+      var badgeCount :=(rest.Response.JSONValue.FindValue('response.badges') as TJSONArray).Count;
+
+      SetLength(Result.Badges, badgeCount);
+
+      var I := 0;
+      for var jBadge in rest.Response.JSONValue.FindValue('response.badges') as TJSONArray do
+      begin
+        var aBadge: TSteamBadge;
+        jBadge.TryGetValue<Integer>('badgeid', aBadge.BadgeID);
+        jBadge.TryGetValue<Integer>('appid', aBadge.AppID);
+        jBadge.TryGetValue<Integer>('level', aBadge.Level);
+        jBadge.TryGetValue<Int64>('completion_time', aBadge.CompletionTime);
+        jBadge.TryGetValue<Integer>('xp', aBadge.XP);
+        jBadge.TryGetValue<string>('communityitemid', aBadge.CommunityID);
+        jBadge.TryGetValue<Integer>('scarcity', aBadge.Scarcity);
+
+        Result.Badges[I] := aBadge;
+
+        Inc(I);
+      end;
+
+      rest.Response.JSONValue.TryGetValue<Integer>('response.player_xp', result.PlayerXP);
+      rest.Response.JSONValue.TryGetValue<Integer>('response.player_level', result.PlayerLevel);
+      rest.Response.JSONValue.TryGetValue<Integer>('response.player_xp_needed_to_level_up', result.PlayerXpNeededToLevelUp);
+      rest.Response.JSONValue.TryGetValue<Integer>('response.player_xp_needed_current_level', result.PlayerXpNeededCurrentLevel);
+    end
+    else
+      raise Exception.Create('[TSteamAPIIPlayerService.GetBadges] ' + rest.Response.StatusText);
+  finally
+    rest.Free;
+  end;
 end;
 
 function TSteamAPIIPlayerService.GetOwnedGames(const SteamID: UInt64; const IncludeAppInfo, IncludeFreeGames: Boolean): TArray<TSteamOwnedGame>;

@@ -57,6 +57,23 @@ begin
   end;
 end;
 
+procedure Test_IPlayerService_GetBadges;
+begin
+  var steam := TSteamAPI.Create(API_KEY);
+  try
+    var result := steam.IPlayerService.GetBadges(STEAM_ID);
+    for var aBadge in result.Badges do
+      Writeln(aBadge.Level);
+
+    Writeln(result.PlayerXP);
+    Writeln(result.PlayerLevel);
+    Writeln(result.PlayerXpNeededToLevelUp);
+    Writeln(result.PlayerXpNeededCurrentLevel);
+  finally
+    steam.Destroy;
+  end;
+end;
+
 procedure Main;
 begin
   while True do
@@ -76,10 +93,12 @@ begin
 end;
 
 begin
+  ReportMemoryLeaksOnShutdown := True;
+
   try
     //Main;
 
-    Test_IPlayerService_GetSteamLevel;
+    Test_IPlayerService_GetBadges;
 
     Writeln('Press any key to exit.');
     ReadLn;
