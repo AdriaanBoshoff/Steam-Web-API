@@ -18,6 +18,21 @@ const
 const
   STEAM_ID = 76561198113034550;
 
+procedure Test_ISteamUser_GetPlayerSummaries;
+begin
+  var steam := TSteamAPI.Create(API_KEY);
+  try
+    for var aPlayer in steam.ISteamUser.GetPlayerSummariesV2('76561198113034550,76561198230794964,76561198068945665') do
+    begin
+      Writeln(Format('SteamId: %s', [aPlayer.SteamID]));
+      Writeln(Format('Game: %s', [aPlayer.GameExtraInfo]));
+      Writeln('===================================');
+    end;
+  finally
+    steam.Destroy;
+  end;
+end;
+
 procedure Test_ISteamUser_GetFriendsList;
 begin
   var steam := TSteamAPI.Create(API_KEY);
@@ -136,7 +151,7 @@ begin
   try
     //Main;
 
-    Test_ISteamUser_GetFriendsList;
+    Test_ISteamUser_GetPlayerSummaries;
 
     Writeln('Press any key to exit.');
     ReadLn;

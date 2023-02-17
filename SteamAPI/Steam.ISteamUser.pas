@@ -14,6 +14,7 @@ type
       API_URL = 'https://api.steampowered.com/ISteamUser/';
       API_GetPlayerBans = 'GetPlayerBans';
       API_GetFriendList = 'GetFriendList';
+      API_GetPlayerSummaries = 'GetPlayerSummaries';
   private
     { Private Variables }
     FToken: string;
@@ -24,6 +25,7 @@ type
     { Public Methods }
     function GetPlayerBans(const SteamIDs: string): TArray<TISteamUser_PlayerBan>;
     function GetFriendsList(const SteamID: UInt64): TArray<TISteamUser_FriendList>;
+    function GetPlayerSummariesV2(const SteamIDs: string): TArray<TISteamUser_PlayerSummary>;
     /////////////////////////////////////////////
     constructor Create(const API_Key: string);
     destructor Destroy;
@@ -106,6 +108,57 @@ begin
     end
     else
       raise Exception.Create('[TSteamAPIISteamUser.GetPlayerBans] ' + rest.Response.StatusText);
+  finally
+    rest.Free;
+  end;
+end;
+
+function TSteamAPIISteamUser.GetPlayerSummariesV2(const SteamIDs: string): TArray<TISteamUser_PlayerSummary>;
+begin
+  var rest := SetupRestRequest(API_GetPlayerSummaries, '2');
+  try
+    rest.AddParameter('steamids', SteamIDs);
+    rest.Method := TRESTRequestMethod.rmGET;
+    rest.Execute;
+
+    if rest.Response.StatusCode = 200 then
+    begin
+      SetLength(Result, (rest.Response.JSONValue.FindValue('response.players') as TJSONArray).Count);
+
+      var I := 0;
+      for var jPlayer in (rest.Response.JSONValue.FindValue('response.players') as TJSONArray) do
+      begin
+        var aPlayer: TISteamUser_PlayerSummary;
+        jPlayer.TryGetValue<string>('steamid', aPlayer.SteamID);
+        jPlayer.TryGetValue<Integer>('communityvisibilitystate', aPlayer.CommunityVisibilityState);
+        jPlayer.TryGetValue<Integer>('profilestate', aPlayer.ProfileState);
+        jPlayer.TryGetValue<string>('personaname', aPlayer.PersonaName);
+        jPlayer.TryGetValue<Integer>('commentpermission', aPlayer.CommentPermission);
+        jPlayer.TryGetValue<string>('profileurl', aPlayer.ProfileURL);
+        jPlayer.TryGetValue<string>('avatar', aPlayer.AvatarURL);
+        jPlayer.TryGetValue<string>('avatarmedium', aPlayer.AvatarMediumURL);
+        jPlayer.TryGetValue<string>('avatarfull', aPlayer.AvatarFullURL);
+        jPlayer.TryGetValue<string>('avatarhash', aPlayer.AvatarHash);
+        jPlayer.TryGetValue<Int64>('lastlogoff', aPlayer.LastLogOff);
+        jPlayer.TryGetValue<Integer>('personastate', aPlayer.PersonaState);
+        jPlayer.TryGetValue<string>('primaryclanid', aPlayer.PrimaryClanID);
+        jPlayer.TryGetValue<Int64>('timecreated', aPlayer.TimeCreated);
+        jPlayer.TryGetValue<Integer>('personastateflags', aPlayer.PersonaStateFlags);
+        jPlayer.TryGetValue<string>('gameserverip', aPlayer.GameServerIP);
+        jPlayer.TryGetValue<string>('gameserversteamid', aPlayer.GameServerSteamID);
+        jPlayer.TryGetValue<string>('gameextrainfo', aPlayer.GameExtraInfo);
+        jPlayer.TryGetValue<string>('gameid', aPlayer.GameID);
+        jPlayer.TryGetValue<string>('loccountrycode', aPlayer.LocCountryCode);
+        jPlayer.TryGetValue<string>('locstatecode', aPlayer.LocStateCode);
+        jPlayer.TryGetValue<string>('loccityid', aPlayer.LocCityID);
+
+        Result[I] := aPlayer;
+
+        Inc(I);
+      end;
+    end
+    else
+      raise Exception.Create('[TSteamAPIISteamUser.GetPlayerSummaries] ' + rest.Response.StatusText);
   finally
     rest.Free;
   end;
