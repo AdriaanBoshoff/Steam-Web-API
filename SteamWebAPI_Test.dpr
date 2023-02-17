@@ -18,6 +18,22 @@ const
 const
   STEAM_ID = 76561198113034550;
 
+procedure Test_ISteamUser_GetFriendsList;
+begin
+  var steam := TSteamAPI.Create(API_KEY);
+  try
+    for var aFriend in steam.ISteamUser.GetFriendsList(STEAM_ID) do
+    begin
+      Writeln(Format('SteamId: %s', [aFriend.SteamID]));
+      Writeln(Format('Relationship: %s', [aFriend.Relationship]));
+      Writeln(Format('Friend_Since: %d', [aFriend.Friend_Since]));
+      Writeln('===================================');
+    end;
+  finally
+    steam.Destroy;
+  end;
+end;
+
 procedure Test_ISteamUser_GetPlayerBans;
 begin
   var steam := TSteamAPI.Create(API_KEY);
@@ -120,7 +136,7 @@ begin
   try
     //Main;
 
-    Test_ISteamUser_GetPlayerBans;
+    Test_ISteamUser_GetFriendsList;
 
     Writeln('Press any key to exit.');
     ReadLn;

@@ -13,6 +13,7 @@ type
     const
       API_URL = 'https://api.steampowered.com/ISteamUser/';
       API_GetPlayerBans = 'GetPlayerBans';
+      API_GetFriendList = 'GetFriendList';
   private
     { Private Variables }
     FToken: string;
@@ -22,6 +23,7 @@ type
   public
     { Public Methods }
     function GetPlayerBans(const SteamIDs: string): TArray<TISteamUser_PlayerBan>;
+    function GetFriendsList(const SteamID: UInt64): TArray<TISteamUser_FriendList>;
     /////////////////////////////////////////////
     constructor Create(const API_Key: string);
     destructor Destroy;
@@ -39,6 +41,38 @@ end;
 destructor TSteamAPIISteamUser.Destroy;
 begin
   //
+end;
+
+function TSteamAPIISteamUser.GetFriendsList(const SteamID: UInt64): TArray<TISteamUser_FriendList>;
+begin
+  var rest := SetupRestRequest(API_GetFriendList);
+  try
+    rest.AddParameter('steamid', SteamID.ToString);
+    rest.Method := TRESTRequestMethod.rmGET;
+    rest.Execute;
+
+    if rest.Response.StatusCode = 200 then
+    begin
+      SetLength(Result, (rest.Response.JSONValue.FindValue('friendslist.friends') as TJSONArray).Count);
+
+      var I := 0;
+      for var jFriend in (rest.Response.JSONValue.FindValue('friendslist.friends') as TJSONArray) do
+      begin
+        var aFriend: TISteamUser_FriendList;
+        jFriend.TryGetValue<string>('steamid', aFriend.SteamID);
+        jFriend.TryGetValue<string>('relationship', aFriend.Relationship);
+        jFriend.TryGetValue<Int64>('friend_since', aFriend.Friend_Since);
+
+        Result[I] := aFriend;
+
+        Inc(I);
+      end;
+    end
+    else
+      raise Exception.Create('[TSteamAPIISteamUser.GetFriendsList] ' + rest.Response.StatusText);
+  finally
+    rest.Free;
+  end;
 end;
 
 function TSteamAPIISteamUser.GetPlayerBans(const SteamIDs: string): TArray<TISteamUser_PlayerBan>;

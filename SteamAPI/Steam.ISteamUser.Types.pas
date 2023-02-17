@@ -13,6 +13,13 @@ type
     EconomyBan: string;
   end;
 
+type
+  TISteamUser_FriendList = record
+    SteamID: string;
+    Relationship: string;
+    Friend_Since: Int64;
+  end;
+
 implementation
 
 end.
