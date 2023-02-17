@@ -8,13 +8,35 @@ uses
   System.SysUtils,
   Steam.API in 'SteamAPI\Steam.API.pas',
   Steam.IPlayerService in 'SteamAPI\Steam.IPlayerService.pas',
-  Steam.IPlayerService.Types in 'SteamAPI\Steam.IPlayerService.Types.pas';
+  Steam.IPlayerService.Types in 'SteamAPI\Steam.IPlayerService.Types.pas',
+  Steam.ISteamUser in 'SteamAPI\Steam.ISteamUser.pas',
+  Steam.ISteamUser.Types in 'SteamAPI\Steam.ISteamUser.Types.pas';
 
 const
   API_KEY = ''; // Removed for github
 
 const
   STEAM_ID = 76561198113034550;
+
+procedure Test_ISteamUser_GetPlayerBans;
+begin
+  var steam := TSteamAPI.Create(API_KEY);
+  try
+    for var aBan in steam.ISteamUser.GetPlayerBans('76561198113034550,76561198230794964,76561198068945665') do
+    begin
+      Writeln(Format('SteamId: %s', [aBan.SteamID]));
+      Writeln(Format('CommunityBanned: %s', [BoolToStr(aBan.CommunityBanned, True)]));
+      Writeln(Format('VACBanned: %s', [BoolToStr(aBan.VACBanned, True)]));
+      Writeln(Format('NumberOfVACBans: %d', [aBan.NumberOfVACBans]));
+      Writeln(Format('DaysSinceLastBan: %d', [aBan.DaysSinceLastBan]));
+      Writeln(Format('NumberOfGameBans: %d', [aBan.NumberOfGameBans]));
+      Writeln(Format('EconomyBan: %s', [aBan.EconomyBan]));
+      Writeln('===================================');
+    end;
+  finally
+    steam.Destroy;
+  end;
+end;
 
 procedure Test_IPlayerService_GetRecentlyPlayedGames;
 begin
@@ -98,7 +120,7 @@ begin
   try
     //Main;
 
-    Test_IPlayerService_GetBadges;
+    Test_ISteamUser_GetPlayerBans;
 
     Writeln('Press any key to exit.');
     ReadLn;
