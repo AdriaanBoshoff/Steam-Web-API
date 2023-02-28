@@ -42,7 +42,7 @@ end;
 
 destructor TSteamAPIISteamUser.Destroy;
 begin
-  //
+  inherited;
 end;
 
 function TSteamAPIISteamUser.GetFriendsList(const SteamID: UInt64): TArray<TISteamUser_FriendList>;
